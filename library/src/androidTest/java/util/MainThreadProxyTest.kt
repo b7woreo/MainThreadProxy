@@ -1,36 +1,25 @@
 package util
 
-import android.os.Handler
 import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainThreadProxyTest {
 
-    private lateinit var mainThread: Thread
-    private lateinit var mainHandler: Handler
-
-    @Before
-    fun setup() {
-        mainThread = Looper.getMainLooper().thread
-        mainHandler = Handler(Looper.getMainLooper())
-    }
-
     @Test
     fun callOnMainThread() = InstrumentationRegistry.getInstrumentation().runOnMainSync {
-        assertEquals(mainThread, Thread.currentThread())
+        assertTrue(Looper.getMainLooper().isCurrentThread)
         callSuccess()
         callFailure()
     }
 
     @Test
     fun callNotOnMainThread() {
-        assertNotEquals(mainThread, Thread.currentThread())
+        assertFalse(Looper.getMainLooper().isCurrentThread)
         callSuccess()
         callFailure()
     }
@@ -48,7 +37,7 @@ class MainThreadProxyTest {
         val result = proxy.call()
 
         assertNotNull(runThread)
-        assertEquals(mainThread, runThread)
+        assertEquals(Looper.getMainLooper().thread, runThread)
         assertEquals("test", result)
     }
 
@@ -64,13 +53,13 @@ class MainThreadProxyTest {
         val proxy = instance.mainThreadProxy<Api>()
         try {
             proxy.call()
+            fail()
         } catch (throwable: Throwable) {
             assertNotNull(runThread)
-            assertEquals(mainThread, runThread)
+            assertEquals(Looper.getMainLooper().thread, runThread)
             assertEquals(ApiException::class, throwable::class)
             return
         }
-        fail("not throw exception")
     }
 
 }
