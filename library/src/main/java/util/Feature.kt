@@ -9,7 +9,7 @@ internal class Feature<T : Any> {
 
     fun set(value: T) {
         synchronized(this) {
-            if (this.value != null) throw RuntimeException("only call once")
+            if (this.value != null) throw AssertionError("only call once")
             this.value = value
         }
         latch.countDown()
